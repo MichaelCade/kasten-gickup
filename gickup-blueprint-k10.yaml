@@ -1,0 +1,29 @@
+apiVersion: cr.kanister.io/v1alpha1
+kind: Blueprint
+metadata:
+  name: gickup-blueprint
+actions:
+  backup:
+    outputArtifacts:
+      ghBackup:
+        # Capture the kopia snapshot information for subsequent actions
+        # The information includes the kopia snapshot ID which is essential for restore and delete to succeed
+        # `kopiaOutput` is the name provided to kando using `--output-name` flag
+        kopiaSnapshot: "{{ .Phases.backupToStore.Output.kopiaOutput }}"
+    phases:
+    - func: KubeExec
+      name: backupToStore
+      args:
+        namespace: "{{ .Deployment.Namespace }}"
+        pod: "{{ index .Deployment.Pods 0 }}"
+        container: "gickup"
+        command:
+        - bash
+        - -o
+        - errexit
+        - -o
+        - pipefail
+        - -c
+        - |
+          gickup /config/conf.yml
+          kando location push --profile '{{ toJson .Profile }}' --path "{{ .Profile.Location.Bucket }}/gickup-backups" --output-name "kopiaOutput" /backups
