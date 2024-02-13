@@ -16,7 +16,7 @@ data:
       local:
         - path: /backups
           structured: true
-          zip: false
+          zip: true
           keep: 5
           bare: true
           lfs: true

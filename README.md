@@ -12,3 +12,4 @@ kubectl apply -f gickup-blueprint.yaml -n kasten-io
 ```
 
 
+kubectl --namespace kasten-io port-forward service/gateway 8080:80
