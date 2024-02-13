@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gickup-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gickup
+  template:
+    metadata:
+      labels:
+        app: gickup
+    spec:
+      containers:
+      - name: gickup
+        image: michaelcade1/kanister-gickup:0.1
+        env:
+        - name: GITHUB_TOKEN
+          valueFrom: 
+            secretKeyRef:
+              name: gickup-secret
+              key: github-token
+        volumeMounts:
+          - name: config-volume
+            mountPath: /config
+            readOnly: true
+          - name: backup-volume
+            mountPath: /backups
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+      volumes:
+        - name: config-volume
+          configMap:
+            name: gickup-config
+        - name: backup-volume
+          persistentVolumeClaim:
+            claimName: gickup-pvc

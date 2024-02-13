@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gickup-config
+data:
+  conf.yml: |
+    source:
+      github:
+        - token: GITHUB_TOKEN
+          user: michaelcade
+          include: 
+            - 90DaysOfDevOps 
+          wiki: true
+          issues: true
+    destination:
+      local:
+        - path: /backups
+          structured: true
+          zip: false
+          keep: 5
+          bare: true
+          lfs: true
+    log: # optional
+      timeformat: 2006-01-02 15:04:05 # you can use a custom time format, use https://yourbasic.org/golang/format-parse-string-time-date-example/ to check how date formats work in go
+      file-logging: # optional
+        dir: /backups/logs # directory to log into
+        file: gickup.log # file to log into
+        maxage: 7 # keep logs for 7 days

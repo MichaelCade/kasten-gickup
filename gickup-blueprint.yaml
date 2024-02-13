@@ -1,0 +1,54 @@
+apiVersion: cr.kanister.io/v1alpha1
+kind: Blueprint
+metadata:
+  name: gickup-blueprint
+actions:
+  backup:
+    phases:
+    - func: KubeExecAll
+      name: getBackupPrefixLocation
+      args:
+        namespace: "{{ .Deployment.Namespace }}"
+        pods: "{{ range .Deployment.Pods }} {{.}}{{end}}"
+        containers: "gickup"
+        command:  
+          - bash
+          - -o
+          - errexit
+          - -o
+          - xtrace
+          - -o
+          - pipefail
+          - -c
+          - |
+            BACKUP_PREFIX_LOCATION={{ .Profile.Location.Bucket }}/gickup_backups/{{ .Deployment.Namespace }}/{{ .Deployment.Name }}
+            kando output backupPrefixLocation $BACKUP_PREFIX_LOCATION
+            kando output localSnapshotPrefixLocation $LOCAL_SNAPSHOT_PREFIX_LOCATION
+            kando output replicaCount {{ len .Deployment.Pods }}
+    - func: KubeExecAll
+      name: takeBackup
+      args:
+        namespace: "{{ .Deployment.Namespace }}"
+        pods: "{{ range .Deployment.Pods }} {{.}}{{end}}"
+        containers: "gickup"
+        command:  
+          - bash
+          - -o
+          - errexit
+          - -o
+          - xtrace
+          - -o
+          - pipefail
+          - -c
+          - |
+            gickup /config/conf.yml 
+    - func: BackupDataAll
+      name: backupToObjectStore
+      args:
+        namespace: "{{ .Deployment.Namespace }}"
+        pods: "{{ range .Deployment.Pods }} {{.}}{{end}}"
+        container: "gickup"
+        includePath: "{{ .Phases.getBackupPrefixLocation.Output.localSnapshotPrefixLocation }}"
+        backupArtifactPrefix: "{{ .Phases.getBackupPrefixLocation.Output.backupPrefixLocation }}"
+    
+      
