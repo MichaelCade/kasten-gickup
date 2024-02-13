@@ -5,12 +5,12 @@ metadata:
 actions:
   backup:
     phases:
-    - func: KubeExecAll
+    - func: KubeExec
       name: takeBackup
       args:
         namespace: "{{ .Deployment.Namespace }}"
-        pods: "{{ range .Deployment.Pods }} {{.}}{{end}}"
-        containers: "gickup"
+        pod: "{{ index .Deployment.Pods 0 }}"
+        container: "gickup"
         command:  
           - bash
           - -o
@@ -22,13 +22,14 @@ actions:
           - -c
           - |
             gickup /config/conf.yml 
-    - func: BackupDataAll
-      name: backupToObjectStore
+    - func: BackupData
+      name: BackupToObjectStore
       args:
         namespace: "{{ .Deployment.Namespace }}"
-        pods: "{{ range .Deployment.Pods }} {{.}}{{end}}"
-        container: "gickup"
-        includePath: "{{ .Phases.getBackupPrefixLocation.Output.localSnapshotPrefixLocation }}"
-        backupArtifactPrefix: "{{ .Phases.getBackupPrefixLocation.Output.backupPrefixLocation }}"
+        pod: "{{ index .Deployment.Pods 0 }}"
+        container: kanister-tools
+        encryptionKey: "testpassword"
+        includePath: /backups
+        backupArtifactPrefix: "{{ .Profile.Location.Bucket }}/gickup-backups"
     
       
