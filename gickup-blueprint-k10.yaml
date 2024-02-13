@@ -27,3 +27,20 @@ actions:
         - |
           gickup /config/conf.yml
           kando location push --profile '{{ toJson .Profile }}' --path "{{ .Profile.Location.Bucket }}/gickup-backups" --output-name "kopiaOutput" /backups
+  restore:
+    - func: KubeExec
+      name: restoreFromStore
+      args: 
+        namespace: "{{ .Deployment.Namespace }}"
+        pod: "{{ index .Deployment.Pods 0 }}"
+        container: "gickup"
+        command: 
+        - bash
+        - -o
+        - errexit
+        - -o
+        - pipefail
+        - -c
+        - |
+          kopia_snap='{{ .ArtifactsIn.esBackup.KopiaSnapshot }}'
+          kando location pull --profile '{{ toJson .Profile }}' --path "/backups" --kopia-snapshot "${kopia_snap}" <TARGET PATH>
